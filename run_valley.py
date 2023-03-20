@@ -7,12 +7,19 @@ from SIA import solve_SIA
 ## First set geometry, parameters, and integration time
 
 # DOMAIN
-L = 50e3                           # Domain length (m)
-N = 100                             # Number of grid centre points
+L = 50e3                            # Domain length (m)
+N = 200                             # Number of grid centre points
 dx = L/N
+# ub = 500/365/86400                   # Sliding velocity (m/s)
+# ub = np.zeros(N)
+# ub[40:60] = 1e4/365/86400
 
 xc = np.arange(dx/2, L+dx/2, dx)    # Cell centre coordinates
 xe = np.arange(0, L+dx, dx)         # Cell edge coordinates
+
+# ub = xc/L * 1000 /86400/365
+# ub = 100/86400/365
+ub = 0
 
 # MASS BALANCE
 # Specify constant mass balance. Gamma is interpreted as the
@@ -46,7 +53,7 @@ bcs = ('no-flux', 'no-flux')    # Boundary conditions: No flux
 
 ## Run the SIA solver
 H1 = solve_SIA(tt, xc, h0, zb, zELA=zELA, method=method,
-    Gamma=Gamma, bcs=bcs, b=balance)
+    Gamma=Gamma, bcs=bcs, b=balance, ub=ub)
 
 ## Plot the solution
 fig1, (ax1, ax2) = plt.subplots(ncols=2, figsize=(8, 4))
@@ -69,7 +76,9 @@ ax2.set_ylabel('Relative mass (-)')
 ax1.text(-0.075, 1.05, 'b', transform=ax2.transAxes, fontsize=14)
 ax1.set_title('Gamma = %.3e (%s)' % (Gamma, balance))
 
+print(H1[-1, :])
+
 plt.tight_layout()
 
 plt.show()
-fig1.savefig('valley.png', dpi=600)
+fig1.savefig('valley_ub.png', dpi=600)

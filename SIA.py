@@ -24,7 +24,7 @@ zELA = 1400
 
 
 def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
-    bcs=('no-flux', 'no-flux'), b='linear', A=A):
+    bcs=('no-flux', 'no-flux'), b='linear', A=A, ub=0):
     """
     Calculate right hand side (dh/dt) of one-dimensional ice flow model.
 
@@ -49,6 +49,8 @@ def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
 
     A = 2.4e-24. Ice-flow constant.
 
+    ub = 0. Sliding velocity. Float or (N,) array
+
     Returns:
     --------
     hprime : (N,) array. Time derivative of ice thickness.
@@ -56,13 +58,13 @@ def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
     """
     n_center = len(h)
     n_edge = n_center + 1
-
+    
     zs = zb + h
     # dzdx defined on edges
     dzdx_center = (zs[1:] - zs[:-1])/dx
 
     # k defined on centers
-    k_center = -(2*A)*((rho*g)**n)*(h**(n+2))/(n+2)
+    k_center = -(2*A)*((rho*g)**n)*(h**(n+2))/(n+2) + ub*h
     q_edge = np.zeros(n_edge)
     q_edge[1:-1] = (k_center[1:] + k_center[:-1])/2 * dzdx_center**n
 
