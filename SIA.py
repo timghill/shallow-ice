@@ -64,9 +64,16 @@ def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
     dzdx_center = (zs[1:] - zs[:-1])/dx
 
     # k defined on centers
-    k_center = -(2*A)*((rho*g)**n)*(h**(n+2))/(n+2) + ub*h
+    k_center = -(2*A)*((rho*g)**n)*(h**(n+2))/(n+2)
     q_edge = np.zeros(n_edge)
     q_edge[1:-1] = (k_center[1:] + k_center[:-1])/2 * dzdx_center**n
+
+    # Compute sliding contribution
+    ub_edge = np.zeros(n_edge)
+    ub_edge[1:-1] = ub[:-1]
+    h_edge = np.zeros(n_edge)
+    h_edge[1:-1] = h[:-1]
+    ubh = ub_edge * h_edge
 
     # Calculate mass balance
     if b=='linear':
@@ -76,18 +83,24 @@ def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
 
     if bcs[0]=='no-flux':
         # No flux boundary conditions
-        q_edge[0] = 0
+        q_edge[0] = 0 
+        ubh[0] = 0      # No sliding on boundary
     elif bcs[0]=='free-flux':
         # q_edge[0] = k_center[0]*(dzdx_center[0])**n
         q_edge[0] = q_edge[1]
-        q_edge[0] += bdot[0]*dx*np.sign(q_edge[0])
+        q_edge[0] += bdot[0]*dx*np.sign(q_edge[0]) + ub[0]*h[0]
+        ubh[0] = ubh[1] # Extrapolate sliding to the first cell
 
     if bcs[1]=='no-flux':
         q_edge[-1] = 0
+        ubh[-1] = 0     # No sliding on no-flux boundary
     elif bcs[1]=='free-flux':
         # q_edge[-1] = k_center[-1]*dzdx_center[-1]**n
         q_edge[-1] = q_edge[-2]
-        q_edge[-1] += bdot[1]*dx*np.sign(q_edge[-1])
+        q_edge[-1] += bdot[1]*dx*np.sign(q_edge[-1]) + ub[-1]*h[-1]
+        ubh[-1] = ub[-1]*h[-1]  # Sliding on last cell
+
+    q_edge = q_edge + ubh
 
     # Time derivative is flux divergence + mass balance
     hprime = -(q_edge[1:] - q_edge[:-1])/dx + bdot

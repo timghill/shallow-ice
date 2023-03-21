@@ -1,4 +1,3 @@
-
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -8,18 +7,19 @@ from SIA import solve_SIA
 
 # DOMAIN
 L = 50e3                            # Domain length (m)
-N = 200                             # Number of grid centre points
+N = 100                             # Number of grid centre points
 dx = L/N
-# ub = 500/365/86400                   # Sliding velocity (m/s)
-# ub = np.zeros(N)
-# ub[40:60] = 1e4/365/86400
 
 xc = np.arange(dx/2, L+dx/2, dx)    # Cell centre coordinates
 xe = np.arange(0, L+dx, dx)         # Cell edge coordinates
 
-# ub = xc/L * 1000 /86400/365
-# ub = 100/86400/365
-ub = 0
+# SLIDING
+# Spatially uniform sliding
+ub = 150*np.ones(xc.shape)/365/86400
+
+# Sliding below a specified x-position
+# ub = np.zeros(xc.shape)
+# ub[40:] = 100/365/86400
 
 # MASS BALANCE
 # Specify constant mass balance. Gamma is interpreted as the
@@ -37,9 +37,9 @@ zb = b0 - 1/20*xc                   # Flat bed elevation
 # INITIAL THICKNESS
 h0 = 150*np.ones(xc.shape)
 
-# INTEGRATION
+# INTEGRATION parameters
 t0 = 0                              # Start time (seconds)
-tend = 750*365*86400                # End time (seconds)
+tend = 500*365*86400                # End time (seconds)
 dt = 30*86400                       # Time step (seconds). This can be large
                                     # since we use implicit timestepping
                                     
@@ -76,9 +76,11 @@ ax2.set_ylabel('Relative mass (-)')
 ax1.text(-0.075, 1.05, 'b', transform=ax2.transAxes, fontsize=14)
 ax1.set_title('Gamma = %.3e (%s)' % (Gamma, balance))
 
-print(H1[-1, :])
-
 plt.tight_layout()
+
+fig, ax = plt.subplots()
+ax.plot(xc/1e3, H1[-1, :])
+ax.grid()
 
 plt.show()
 fig1.savefig('valley_ub.png', dpi=600)
