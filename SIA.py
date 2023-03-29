@@ -22,7 +22,6 @@ A = 2.4e-24                 # Ice flow coefficient (Pa-3.s-1. Cuffey & Paterson)
 Gamma = 0.007/(365*86400)   # Mass balance gradient (s-1)
 zELA = 1400                 # Equilibrium line altitude (m)
 
-
 def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
     bcs=('no-flux', 'no-flux'), b='linear', A=A, ub=None):
     """
@@ -68,6 +67,7 @@ def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
     q_edge = np.zeros(n_edge)
     q_edge[1:-1] = (k_center[1:] + k_center[:-1])/2 * dzdx_center**n
 
+
     # Compute sliding contribution
     if ub is None:
         ub = np.zeros(n_center)
@@ -76,6 +76,17 @@ def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
     h_edge = np.zeros(n_edge)
     h_edge[1:-1] = h[:-1]
     ubh = ub_edge * h_edge
+
+    # Compute velocity
+    dzdx_vel = np.zeros(n_center)
+    dzdx_vel[1:-1] = 0.5*(dzdx_center[1:] + dzdx_center[:-1])
+    dzdx_vel[:-1] = dzdx_center
+    # dzdx_vel[1:-1] = (zs[2:] - zs[:-2])/2/dx
+    # dzdx_vel[0]
+    # dzdx_center
+    # print(u*365*86400)
+    # print(dzdx_vel)
+    u = (-2*A*(rho*g)**n * h**(n+1)/(n+1) * dzdx_vel**n) + ub
 
     # Calculate mass balance
     if b=='linear':
@@ -106,7 +117,7 @@ def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
 
     # Time derivative is flux divergence + mass balance
     hprime = -(q_edge[1:] - q_edge[:-1])/dx + bdot
-    return hprime
+    return (hprime, u)
 
 def solve_SIA(tt, xc, h, zb, Gamma=Gamma, zELA=zELA, **kwargs):
     """
@@ -144,32 +155,23 @@ def solve_SIA(tt, xc, h, zb, Gamma=Gamma, zELA=zELA, **kwargs):
     dx = xc[1] - xc[0]
     H = np.zeros((nsteps, len(xc)))
     H[0, :] = h
+    U = np.zeros((nsteps, len(xc)))
     i = 1
 
-    # Time stepping parameters
-    c2 = 1/2
-    c3 = 1/2
-    c4 = 1
-
-    b1 = 1/6
-    b2 = 1/3
-    b3 = 1/3
-    b4 = 1/6
-
-    a21 = 0.5
-    a31 = 0
-    a32 = 0.5
-
-    rhs_fun = lambda t, y: rhs_1d(t, y, zb, dx, Gamma=Gamma, zELA=zELA,**kwargs)
+    rhs_fun = lambda t, y: rhs_1d(t, y, zb, dx, Gamma=Gamma, zELA=zELA,**kwargs)[0]
+    vel_fun = lambda t, y: rhs_1d(t, y, zb, dx, Gamma=Gamma, zELA=zELA,**kwargs)[1]
+    U[0, :] = vel_fun(t, h)
     while t<tend:
         h_old = h
 
         g = lambda z: z - h - 0.5*dt*(rhs_fun(t, z) + rhs_fun(t, h))
+
         h_new = scipy.optimize.newton(g, h, tol=1e-6, maxiter=50)
         h_new[h_new<0] = 0
 
         h = h_new
         H[i, :] = h
+        U[i, :] = vel_fun(t, h)
         i+=1
         t+=dt
 
@@ -178,4 +180,8 @@ def solve_SIA(tt, xc, h, zb, Gamma=Gamma, zELA=zELA, **kwargs):
     tend = time.time()
     dtime = tend - tstart
     print('Elapsed time: ', dtime)
-    return H
+
+    # Turn values into nan's where ice thickness is zero
+    U[H<1e-3] = 0
+    # H[H<=0] = np.nan
+    return (H, U)
