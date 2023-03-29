@@ -24,7 +24,7 @@ zELA = 1400
 
 
 def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
-    bcs=('no-flux', 'no-flux'), b='linear', A=A, ub=0):
+    bcs=('no-flux', 'no-flux'), b='linear', A=A, ub=None):
     """
     Calculate right hand side (dh/dt) of one-dimensional ice flow model.
 
@@ -69,6 +69,8 @@ def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
     q_edge[1:-1] = (k_center[1:] + k_center[:-1])/2 * dzdx_center**n
 
     # Compute sliding contribution
+    if ub is None:
+        ub = np.zeros(n_center)
     ub_edge = np.zeros(n_edge)
     ub_edge[1:-1] = ub[:-1]
     h_edge = np.zeros(n_edge)
