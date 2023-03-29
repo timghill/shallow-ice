@@ -42,15 +42,15 @@ tt = np.arange(t0, tend+dt, dt)     # Solution time array
 
 ## THINGS THAT CAN CHANGE
 # mass_balance = 0.25/86400/365
-# mass_balance = 0.5/(86400*365)      # Mass-balance (m w.e./a)
-mass_balance = 1/86400/365
+mass_balance = 0.5/(86400*365)      # Mass-balance (m w.e./a)
+# mass_balance = 1/86400/365
 
 # FLOW-LAW COEFFICIENT
 # Flow-law coefficient should be near 2.4e-24. Decreasing A
 # below about 2.4e-25 may cause the glacier to extend out of the domain
 # A = 4.8e-24
-# A = 2.4e-24                         # Cuffey & Paterson (2010) recommended
-A = 4.8e-25
+A = 2.4e-24                         # Cuffey & Paterson (2010) recommended
+# A = 4.8e-25
 
 
 ## Run the SIA solver
@@ -92,4 +92,4 @@ ax3.set_ylabel('Relative mass (-)')
 ax3.text(-0.075, 1.05, 'a', transform=ax3.transAxes, fontsize=12)
 
 plt.show()
-fig1.savefig('constant_balance.png', dpi=600)
+fig1.savefig('flat_bed_constant_balance.png', dpi=600)

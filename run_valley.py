@@ -68,8 +68,7 @@ Gamma = 0.007/(365*86400)           # Mass-balance gradient (m w.e./s/m)
 # Gamma = 0.005/365/86400
 
 # FLOW-LAW COEFFICIENT
-# Flow-law coefficient should be near 2.4e-24. Decreasing A
-# below about 2.4e-25 may cause the glacier to extend out of the domain
+# Flow-law coefficient should be near 2.4e-24.
 # A = 2.4e-23
 A = 2.4e-24                         # Cuffey & Paterson (2010) recommended
 # A = 4.8e-25
