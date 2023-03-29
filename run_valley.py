@@ -45,14 +45,10 @@ dt = 30*86400                       # Time step (seconds). This can be large
                                     
 tt = np.arange(t0, tend+dt, dt)     # Solution time array
 
-# Numerical parameters
-method = 'CN'                       # Crank-Nicolson implicit timestepping
-# https://en.wikipedia.org/wiki/Crank%E2%80%93Nicolson_method
-
 bcs = ('no-flux', 'no-flux')    # Boundary conditions: No flux
 
 ## Run the SIA solver
-H1 = solve_SIA(tt, xc, h0, zb, zELA=zELA, method=method,
+H1 = solve_SIA(tt, xc, h0, zb, zELA=zELA,
     Gamma=Gamma, bcs=bcs, b=balance, ub=ub)
 
 ## Plot the solution
@@ -78,9 +74,6 @@ ax1.set_title('Gamma = %.3e (%s)' % (Gamma, balance))
 
 plt.tight_layout()
 
-fig, ax = plt.subplots()
-ax.plot(xc/1e3, H1[-1, :])
-ax.grid()
-
 plt.show()
+
 fig1.savefig('valley_ub.png', dpi=600)
