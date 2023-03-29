@@ -80,12 +80,8 @@ def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
     # Compute velocity
     dzdx_vel = np.zeros(n_center)
     dzdx_vel[1:-1] = 0.5*(dzdx_center[1:] + dzdx_center[:-1])
-    dzdx_vel[:-1] = dzdx_center
-    # dzdx_vel[1:-1] = (zs[2:] - zs[:-2])/2/dx
-    # dzdx_vel[0]
-    # dzdx_center
-    # print(u*365*86400)
-    # print(dzdx_vel)
+    dzdx_vel[0] = dzdx_vel[1]
+    dzdx_vel[-1] = dzdx_vel[-2]
     u = (-2*A*(rho*g)**n * h**(n+1)/(n+1) * dzdx_vel**n) + ub
 
     # Calculate mass balance
@@ -99,7 +95,6 @@ def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
         q_edge[0] = 0 
         ubh[0] = 0      # No sliding on boundary
     elif bcs[0]=='free-flux':
-        # q_edge[0] = k_center[0]*(dzdx_center[0])**n
         q_edge[0] = q_edge[1]
         q_edge[0] += bdot[0]*dx*np.sign(q_edge[0]) + ub[0]*h[0]
         ubh[0] = ubh[1] # Extrapolate sliding to the first cell
@@ -108,7 +103,6 @@ def rhs_1d(t, h, zb, dx, Gamma=Gamma, zELA=zELA,
         q_edge[-1] = 0
         ubh[-1] = 0     # No sliding on no-flux boundary
     elif bcs[1]=='free-flux':
-        # q_edge[-1] = k_center[-1]*dzdx_center[-1]**n
         q_edge[-1] = q_edge[-2]
         q_edge[-1] += bdot[1]*dx*np.sign(q_edge[-1]) + ub[-1]*h[-1]
         ubh[-1] = ub[-1]*h[-1]  # Sliding on last cell
@@ -163,9 +157,7 @@ def solve_SIA(tt, xc, h, zb, Gamma=Gamma, zELA=zELA, **kwargs):
     U[0, :] = vel_fun(t, h)
     while t<tend:
         h_old = h
-
         g = lambda z: z - h - 0.5*dt*(rhs_fun(t, z) + rhs_fun(t, h))
-
         h_new = scipy.optimize.newton(g, h, tol=1e-6, maxiter=50)
         h_new[h_new<0] = 0
 
